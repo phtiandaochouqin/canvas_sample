@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            *{
+    box-sizing: border-box;
+}
+.app-container{
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+}
+.caidan{
+    height: 100px;
+    width: 100vw;
+    display: flex;
+    border-bottom: 3px solid #ccc;
+    justify-content: space-around;
+    align-items: center; 
+}
+.line{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.xi:after{
+content: "";
+background:#333;
+width:6px;
+height: 6px;
+display: block;
+border-radius: 3px;
+}
+.normal:after{
+    content: "";
+    background-color: #333;
+    width: 16px;
+    height: 16px;
+    display: block;
+    border-radius: 8px;
+}
+.cu:after{
+content: "";
+background:#333;
+width: 32px;
+height: 32px;
+display: block;
+border-radius: 16px;
+}
+#canvas{
+    flex: 1;
+    width: 100vw;
+}
+.btn,.btn2{
+    width: 150px;
+    height: 50px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    text-align: center;
+    line-height: 60px;
+    color: #999;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+}
+.btn1{
+    width: 150px;
+    height: 50px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    text-align: center;
+    line-height: 50px;
+    color: #999;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+}
+.btn.active{
+    box-shadow: 0 0 20px deepskyblue;
+    border: 1px solid deepskyblue;
+}
+.btn1.active{
+    box-shadow: 0 0 20px deepskyblue;
+    border: 1px solid deepskyblue;
+}
+</style>
+        </style>
+    </head>
+    <body>
+        <div class="app-container">
+            <div class="caidan">
+            <div class="btn active" id="huabi" :style="{'background-image':'url('+require('@/assets/unnamed.png') + ')'}">画笔</div>
+            <div class="btn" id="rect">矩形</div>
+            <div class="btn">圆形</div>
+            <div class="btn">橡皮擦</div>
+            <div class="btn2 download">下载图片</div>
+            <div class="btn2 download2" style="display:none">
+                <a download="download">下载</a>
+            </div>
+            <div class="btn1 line xi active"></div>
+            <div class="btn1 line normal"></div>
+            <div class="btn1 line cu"></div>
+            <div class="btn2"><input type="color" name="color" id="color" value="#000000" /></div>
+        </div>
+        <canvas id="canvas"></canvas>
+        <img id="img">
+        <script>
+             var allBtn = document.querySelectorAll('.btn')
+    var canvas = document.querySelector('#canvas')
+    var ctx = canvas.getContext('2d')
+    var img = document.querySelector('#img')
+    canvas.setAttribute("width",canvas.offsetWidth)
+    canvas.setAttribute("height",canvas.offsetHeight)
+    var huaban = {
+        type:"huabi",
+        isDraw:false,
+        beginX:0,
+        beginY:0,
+        lineWidth:6,
+        imageData:null,
+        color:"#000",
+        huabiFn:function(e){
+            var x = e.pageX - canvas.offsetLeft
+            var y = e.pageY - canvas.offsetTop
+            ctx.lineTo(x,y)
+            ctx.strokeStyle = huaban.color
+            ctx.lineWidth = huaban.lineWidth
+            ctx.lineCap = "round"
+            ctx.lineJoin = "round"
+            ctx.stroke()
+            // ctx.beginPath()
+            // ctx.arc(x,y,3,0,2*Math.PI)
+            // ctx.fill()
+            // ctx.closePath()
+        },
+        rectFn:function(e){
+            var x = e.pageX - canvas.offsetLeft
+            var y = e.pageY - canvas.offsetTop
+            ctx.clearRect(0,0,canvas.offsetWidth,canvas.offsetHeight)
+            if(huaban.imageData!=null){
+                ctx.putImageData(huaban.imageData,0,0,0,0,canvas.offsetWidth,canvas.offsetHeight)
+            }
+            
+            ctx.beginPath()
+            ctx.rect(huaban.beginX,huaban.beginY,x-huaban.beginX,y-huaban.beginY)
+            ctx.strokeStyle = huaban.color
+            ctx.stroke()
+            // ctx.fill()
+            // ctx.closePath()
+        }
+    }
+    var huabiBtn = document.querySelector('#huabi')
+    huabiBtn.onclick = function(){
+          allBtn.forEach(function(item,i){
+                item.classList.remove("active")
+            })
+        huabiBtn.classList.add("active")
+        huaban.type = "huabi"
+        }
+
+        var rectBtn = document.querySelector('#rect')
+        rectBtn.onclick = function(){
+            allBtn.forEach(function(item,i){
+                item.classList.remove("active")
+            })
+        rectBtn.classList.add("active")
+        huaban.type = "rect"
+        }
+
+    var lineDivs = document.querySelectorAll('.line')
+    lineDivs.forEach(function(item,i){
+        item.onclick = function(){
+            lineDivs.forEach(function(a,b){
+                a.classList.remove("active")
+            })
+            item.classList.add("active")
+            if(i==0){
+                huaban.lineWidth = 6
+            }else if(i==1){
+                huaban.lineWidth = 16
+            }else{
+                huaban.lineWidth = 32
+            }
+        }
+    })
+    var colorInput = document.querySelector("#color")
+    colorInput.onchange = function(e){
+        huaban.color = colorInput.value
+    }
+    var downloadBtn = document.querySelector(".download")
+    downloadBtn.onclick = function(){
+        var url = canvas.toDataURL()
+       var aDom = document.querySelector(".download2 a")
+       aDom.setAttribute("href",url)
+    aDom.click()
+        
+    }
+
+     canvas.onmousedown = function(e){
+         huaban.isDraw = true
+         if(huaban.type=="rect"){
+             var x = e.pageX - canvas.offsetLeft
+            var y = e.pageY - canvas.offsetTop
+            huaban.beginX = x
+            huaban.beginY = y
+         }
+         if(huaban.type=="huabi"){
+             var x = e.pageX - canvas.offsetLeft
+             var y = e.pageY - canvas.offsetTop
+             huaban.beginX = x
+             huaban.beginY = y
+             ctx.beginPath()
+             ctx.moveTo(x,y)
+             let strFn=huaban.type + 'Fn'
+             huaban[strFn](e)
+         }
+         
+     }
+     canvas.onmouseup = function(){
+         huaban.imageData = ctx.getImageData(0,0,canvas.offsetWidth,canvas.offsetHeight)
+         huaban.isDraw = false
+        if(huaban.type=="huabi"){
+            ctx.closePath()
+        }
+     }
+     canvas.onmousemove = function(e){
+         if(huaban.isDraw){
+             let strFn=huaban.type + 'Fn'
+             huaban[strFn](e)
+         }
+     }
+        </script>
+        </div>
+    </body>
+</html>
